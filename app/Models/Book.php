@@ -33,4 +33,15 @@ class Book extends Model
         return $this->hasMany(Rating::class);
     }
 
+    public function averageRating()
+    {
+        return $this->ratings()->avg('rating') ?? 0;
+    }
+
+    public function totalVoters()
+    {
+        return $this->ratings()->count();
+    }
+
+
 }

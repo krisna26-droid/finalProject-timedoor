@@ -42,8 +42,9 @@
                     <td>{{ $book->author->name ?? '-' }}</td>
                     <td>{{ $book->category ?? '-' }}</td>
                     <td>{{ $book->isbn }}</td>
-                    <td>{{ number_format($book->average_rating ?? 0, 1) }}</td>
-                    <td>{{ $book->voters_count ?? 0 }}</td>
+                    <td>{{ number_format($book->average_rating, 1) }}</td>
+                    <td>{{ $book->voters_count }}</td>
+
                     <td>
                         @if ($book->status === 'available')
                             <span class="badge bg-success">Available</span>

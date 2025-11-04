@@ -32,6 +32,7 @@ class RatingController extends Controller
             'voter_name' => $request->voter_name,
         ]);
 
-        return redirect()->route('books.index')->with('success', 'Rating berhasil ditambahkan!');
+        return redirect('/')
+            ->with('success', 'Rating berhasil ditambahkan!');
     }
 }

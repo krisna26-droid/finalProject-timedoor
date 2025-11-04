@@ -9,6 +9,11 @@ class BookController extends Controller
 {
     public function index( Request $request){
         $books = Book::with('author', 'categories')->paginate(10);
+
+        foreach ($books as $book) {
+            $book->average_rating = $book->ratings->avg('rating') ?? 0;
+            $book->voters_count = $book->ratings->count();
+        }
         return view('books.index', compact('books'));
     }
 }
