@@ -21,6 +21,7 @@ return new class extends Migration
             $table->year('publication_year')->nullable();
             $table->enum('status', ['available', 'rented', 'reserved'])->default('available');
             $table->string('store_location')->nullable();
+            $table->timestamps();
             });
     }
 

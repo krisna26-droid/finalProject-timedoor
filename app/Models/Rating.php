@@ -8,4 +8,6 @@ use Illuminate\Database\Eloquent\Model;
 class Rating extends Model
 {
     use HasFactory;
+
+    protected $fillable = ['book_id', 'rating', 'voter_name'];
 }
