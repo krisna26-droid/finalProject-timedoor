@@ -3,42 +3,48 @@
 namespace App\Http\Controllers;
 
 use App\Models\Author;
+use App\Models\Book;
+use App\Models\Rating;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
+
 
 class AuthorController extends Controller
 {
-    public function index(Request $request)
+    public function index()
     {
-        // Ambil data penulis dengan jumlah buku dan rating rata-rata
-        $authors = Author::withCount('books')
-            ->with(['books.ratings'])
-            ->paginate(10);
+        // Ambil semua penulis
+        $authors = Author::paginate(10);
 
-        // Tambahkan kolom tambahan agar view bisa pakai
-        $authors->transform(function ($author) {
-            // Hitung total voters dan rata-rata rating
-            $ratings = $author->books->flatMap->ratings;
-            $totalVoters = $ratings->count();
-            $averageRating = $ratings->avg('rating') ?? 0;
+        // Bikin data tambahan untuk tiap penulis
+        foreach ($authors as $author) {
+            // Ambil semua buku milik penulis ini
+            $books = Book::where('author_id', $author->id)->get();
 
-            // Ambil buku terbaik dan terburuk
-            $bestBook = $author->books->sortByDesc(function ($book) {
-                return $book->ratings->avg('rating');
-            })->first();
+            // Hitung jumlah buku
+            $author->books_count = $books->count();
 
-            $worstBook = $author->books->sortBy(function ($book) {
-                return $book->ratings->avg('rating');
-            })->first();
+            // Ambil semua rating dari buku-buku milik penulis ini
+            $bookIds = $books->pluck('id');
+            $ratings = Rating::whereIn('book_id', $bookIds)->get();
 
-            // Tambahkan properti ke author
-            $author->total_voters = $totalVoters;
-            $author->average_rating = $averageRating;
+            // Hitung rata-rata rating dan jumlah voters
+            $author->average_rating = $ratings->avg('rating') ?? 0;
+            $author->total_voters = $ratings->count();
+
+            // Cari buku terbaik & terburuk
+            $bestBook = Book::whereIn('id', $bookIds)
+                ->withAvg('ratings', 'rating')
+                ->orderByDesc('ratings_avg_rating')
+                ->first();
+
+            $worstBook = Book::whereIn('id', $bookIds)
+                ->withAvg('ratings', 'rating')
+                ->orderBy('ratings_avg_rating')
+                ->first();
+
             $author->best_book = $bestBook->title ?? '-';
             $author->worst_book = $worstBook->title ?? '-';
-
-            return $author;
-        });
+        }
 
         return view('authors.index', compact('authors'));
     }
