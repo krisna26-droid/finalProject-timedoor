@@ -28,5 +28,9 @@ class Book extends Model
     {
         return $this->belongsToMany(Category::class);
     }
+     public function ratings()
+    {
+        return $this->hasMany(Rating::class);
+    }
 
 }
