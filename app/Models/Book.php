@@ -19,4 +19,14 @@ class Book extends Model
         'status',
         'store_location',
     ];
+
+    public function author()
+    {
+        return $this->belongsTo(Author::class);
+    }
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class);
+    }
+
 }

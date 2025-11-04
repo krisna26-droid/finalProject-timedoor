@@ -39,22 +39,20 @@
             @forelse ($books as $book)
                 <tr>
                     <td>{{ $book->title }}</td>
-                    <td>{{ $book->author->name }}</td>
-                    <td>
-                        @foreach ($book->categories as $category)
-                            <span class="badge bg-secondary">{{ $category->name }}</span>
-                        @endforeach
-                    </td>
+                    <td>{{ $book->author->name ?? '-' }}</td>
+                    <td>{{ $book->category ?? '-' }}</td>
                     <td>{{ $book->isbn }}</td>
-                    <td>{{ number_format($book->average_rating, 1) }}</td>
-                    <td>{{ $book->voters_count }}</td>
+                    <td>{{ number_format($book->average_rating ?? 0, 1) }}</td>
+                    <td>{{ $book->voters_count ?? 0 }}</td>
                     <td>
                         @if ($book->status === 'available')
                             <span class="badge bg-success">Available</span>
                         @elseif ($book->status === 'rented')
                             <span class="badge bg-danger">Rented</span>
-                        @else
+                        @elseif ($book->status === 'reserved')
                             <span class="badge bg-warning">Reserved</span>
+                        @else
+                            <span class="badge bg-secondary">Unknown</span>
                         @endif
                     </td>
                 </tr>
