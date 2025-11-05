@@ -13,9 +13,11 @@ class RatingSeeder extends Seeder
      */
     public function run(): void
     {
-        Rating::create(['book_id' => 1, 'rating' => 9, 'voter_name' => 'Krisna']);
-        Rating::create(['book_id' => 1, 'rating' => 8, 'voter_name' => 'Ngurah']);
-        Rating::create(['book_id' => 2, 'rating' => 10, 'voter_name' => 'Jon']);
-        Rating::create(['book_id' => 3, 'rating' => 7, 'voter_name' => 'Yuga']);
+        // Rating::create(['book_id' => 1, 'rating' => 9, 'voter_name' => 'Krisna']);
+        // Rating::create(['book_id' => 1, 'rating' => 8, 'voter_name' => 'Ngurah']);
+        // Rating::create(['book_id' => 2, 'rating' => 10, 'voter_name' => 'Jon']);
+        // Rating::create(['book_id' => 3, 'rating' => 7, 'voter_name' => 'Yuga']);
+
+        Rating::factory()->count(10)->create();
     }
 }

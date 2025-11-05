@@ -39,29 +39,29 @@ class BookSeeder extends Seeder
         // ]);
 
 
-        Book::factory()->count(10)->create();
+        // Book::factory()->count(10)->create();
 
-        // $faker =Faker::create();
-        // $authors = Author::pluck('id')->toArray();
-        // $categories = Category::pluck('id')->toArray();
+        $faker =Faker::create();
+        $authors = Author::pluck('id')->toArray();
+        $categories = Category::pluck('id')->toArray();
 
-        // $total = 100000;
-        // for ($i = 0; $i < $total; $i++) {
-        //     Book::create([
-        //         'title' => $faker->sentence(),
-        //         'author_id' => $faker->randomElement($authors),
-        //         'category' => $faker->randomElement($categories),
-        //         'isbn' => $faker->unique()->isbn13(),
-        //         'publisher' => $faker->company(),
-        //         'publication_year' => $faker->numberBetween(1950, 2025),
-        //         'status' => $faker->randomElement(['available', 'rented', 'reserved']),
-        //         'store_location' => $faker->randomElement(['Singaraja', 'Denpasar', 'Banyuwangi', 'Situbondo']),
-        //         'average_rating' => 0,
-        //         'voters_count' => 0,
-        //         'created_at' => now(),
-        //         'updated_at' => now(),
-        //     ]);
-        // }
+        $total = 100000;
+        for ($i = 0; $i < $total; $i++) {
+            Book::create([
+                'title' => $faker->sentence(),
+                'author_id' => $faker->randomElement($authors),
+                'category_id' => $faker->randomElement($categories),
+                'isbn' => $faker->unique()->isbn13(),
+                'publisher' => $faker->company(),
+                'publication_year' => $faker->numberBetween(1950, 2025),
+                'status' => $faker->randomElement(['available', 'rented', 'reserved']),
+                'store_location' => $faker->randomElement(['Singaraja', 'Denpasar', 'Banyuwangi', 'Situbondo']),
+                'average_rating' => 0,
+                'voters_count' => 0,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
     }
 }

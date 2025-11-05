@@ -55,9 +55,6 @@
             @endforelse
         </tbody>
     </table>
-
     <!-- Pagination -->
-    <div class="d-flex justify-content-center">
-        {{ $authors->links() }}
-    </div>
+    {{ $authors->links('pagination::bootstrap-5') }}
 @endsection

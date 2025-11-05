@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Book;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Rating>
@@ -17,7 +18,7 @@ class RatingFactory extends Factory
     public function definition(): array
     {
         return [
-            'book_id' => \App\Models\Book::factory(),
+            'book_id' => Book::factory(),
             'rating' => $this->faker->numberBetween(1, 10),
             'voter_name' => $this->faker->name(),
         ];
