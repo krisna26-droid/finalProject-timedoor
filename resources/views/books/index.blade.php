@@ -8,21 +8,17 @@
 
     <!-- Pencarian -->
     <div class="col-md-3">
-        <input type="text" name="search" class="form-control"
-               placeholder="Cari judul, penulis, ISBN, atau penerbit"
-               value="{{ request('search') }}">
+        <input type="text" name="search" class="form-control" placeholder="Cari judul, penulis, ISBN, atau penerbit" value="{{ request('search') }}">
     </div>
 
     <!-- Kategori -->
     <div class="col-md-2">
-        <input type="text" name="category" class="form-control"
-               placeholder="Kategori" value="{{ request('category') }}">
+        <input type="text" name="category" class="form-control" placeholder="Kategori" value="{{ request('category') }}">
     </div>
 
     <!-- Penulis -->
     <div class="col-md-2">
-        <input type="text" name="author_id" class="form-control"
-               placeholder="ID Penulis" value="{{ request('author_id') }}">
+        <input type="text" name="author_id" class="form-control" placeholder="ID Penulis" value="{{ request('author_id') }}">
     </div>
 
     <!-- Tahun terbit -->
@@ -43,16 +39,13 @@
 
     <!-- Lokasi Toko -->
     <div class="col-md-2">
-        <input type="text" name="store_location" class="form-control"
-               placeholder="Lokasi Toko" value="{{ request('store_location') }}">
+        <input type="text" name="store_location" class="form-control" placeholder="Lokasi Toko" value="{{ request('store_location') }}">
     </div>
 
     <!-- Rentang Rating -->
     <div class="col-md-2 d-flex gap-2">
-        <input type="number" name="rating_min" class="form-control" placeholder="Min" min="1" max="10"
-               value="{{ request('rating_min') }}">
-        <input type="number" name="rating_max" class="form-control" placeholder="Max" min="1" max="10"
-               value="{{ request('rating_max') }}">
+        <input type="number" name="rating_min" class="form-control" placeholder="Min" min="1" max="10" value="{{ request('rating_min') }}">
+        <input type="number" name="rating_max" class="form-control" placeholder="Max" min="1" max="10" value="{{ request('rating_max') }}">
     </div>
 
     <!-- Sorting -->

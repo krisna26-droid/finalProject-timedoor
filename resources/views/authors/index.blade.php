@@ -16,7 +16,7 @@
         <div class="col-md-4 col-lg-3">
             <select name="sort" class="form-select">
                 <option value="" disabled {{ request('sort') ? '' : 'selected' }}>Urutkan Berdasarkan</option>
-                <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Popularitas (voters > 5)</option>
+                <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Popularitas (rata rata vote > 5)</option>
                 <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Rata-rata Rating</option>
                 <option value="trending" {{ request('sort') == 'trending' ? 'selected' : '' }}>Trending</option>
             </select>
