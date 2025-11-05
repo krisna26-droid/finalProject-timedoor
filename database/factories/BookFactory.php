@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Author;
+use App\Models\Category;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Book>
@@ -18,8 +20,8 @@ class BookFactory extends Factory
     {
         return [
             'title' => $this->faker->sentence(),
-            'author_id' => \App\Models\Author::factory(),
-            'category_id' => \App\Models\Category::factory(),
+            'author_id' => Author::factory(),
+            'category_id' => Category::factory(),
             'isbn' => $this->faker->unique()->isbn13(),
             'publisher' => $this->faker->company(),
             'publication_year' => $this->faker->numberBetween(1950, 2025),
