@@ -5,6 +5,9 @@ namespace Database\Seeders;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\Book;
+use Faker\Factory as Faker;
+use App\Models\Category;
+use App\Models\Author;
 
 class BookSeeder extends Seeder
 {
@@ -35,26 +38,30 @@ class BookSeeder extends Seeder
         //     'store_location' => 'A2'
         // ]);
 
-        // Book::create([
-        //     'title' => 'Norwegian Wood',
-        //     'author_id' => 3,
-        //     'category' => 'Romance',
-        //     'isbn' => '9780375704024',
-        //     'publisher' => 'Vintage',
-        //     'publication_year' => 1987,
-        //     'status' => 'rented',
-        //     'store_location' => 'B1'
-        // ]);
 
-        Book::create([
-            'title' => 'Buku Baru',
-            'author_id' => 4,
-            'category' => 'Romance',
-            'isbn' => '9780375704025',
-            'publisher' => 'Vintage',
-            'publication_year' => 2015,
-            'status' => 'available',
-            'store_location' => 'A1'
-        ]);
+        Book::factory()->count(10)->create();
+
+        // $faker =Faker::create();
+        // $authors = Author::pluck('id')->toArray();
+        // $categories = Category::pluck('id')->toArray();
+
+        // $total = 100000;
+        // for ($i = 0; $i < $total; $i++) {
+        //     Book::create([
+        //         'title' => $faker->sentence(),
+        //         'author_id' => $faker->randomElement($authors),
+        //         'category' => $faker->randomElement($categories),
+        //         'isbn' => $faker->unique()->isbn13(),
+        //         'publisher' => $faker->company(),
+        //         'publication_year' => $faker->numberBetween(1950, 2025),
+        //         'status' => $faker->randomElement(['available', 'rented', 'reserved']),
+        //         'store_location' => $faker->randomElement(['Singaraja', 'Denpasar', 'Banyuwangi', 'Situbondo']),
+        //         'average_rating' => 0,
+        //         'voters_count' => 0,
+        //         'created_at' => now(),
+        //         'updated_at' => now(),
+        //     ]);
+        // }
+
     }
 }

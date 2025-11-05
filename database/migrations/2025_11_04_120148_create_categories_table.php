@@ -13,19 +13,10 @@ return new class extends Migration
             $table->string('name');
             $table->timestamps();
         });
-
-        // tabel pivot untuk relasi banyak ke banyak dengan books
-        Schema::create('book_category', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('book_id')->constrained()->onDelete('cascade');
-            $table->foreignId('category_id')->constrained()->onDelete('cascade');
-            $table->timestamps();
-        });
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('book_category');
         Schema::dropIfExists('categories');
     }
 };

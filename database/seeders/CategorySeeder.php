@@ -13,10 +13,11 @@ class CategorySeeder extends Seeder
      */
     public function run(): void
     {
-        $categories = ['Fiksi', 'Non-Fiksi', 'Teknologi', 'Sains', 'Sejarah', 'Anak-anak'];
+        // $categories = ['Fiksi', 'Non-Fiksi', 'Teknologi', 'Sains', 'Sejarah', 'Anak-anak'];
 
-        foreach ($categories as $name) {
-            Category::create(['name' => $name]);
-        }
+        // foreach ($categories as $name) {
+        //     Category::create(['name' => $name]);
+        // }
+        Category::factory()->count(3000)->create();
     }
 }

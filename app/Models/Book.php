@@ -12,23 +12,27 @@ class Book extends Model
     protected $fillable = [
         'title',
         'author_id',
-        'category',
+        'category_id',
         'isbn',
         'publisher',
         'publication_year',
         'status',
         'store_location',
+        'average_rating',
+        'voters_count',
     ];
 
     public function author()
     {
         return $this->belongsTo(Author::class);
     }
-    public function categories()
+
+    public function category()
     {
-        return $this->belongsToMany(Category::class);
+        return $this->belongsTo(Category::class);
     }
-     public function ratings()
+
+    public function ratings()
     {
         return $this->hasMany(Rating::class);
     }
@@ -42,6 +46,4 @@ class Book extends Model
     {
         return $this->ratings()->count();
     }
-
-
 }

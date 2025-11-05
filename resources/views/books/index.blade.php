@@ -91,7 +91,7 @@
         <tr>
             <td>{{ $book->title }}</td>
             <td>{{ $book->author->name ?? '-' }}</td>
-            <td>{{ $book->category ?? '-' }}</td>
+            <td>{{ $book->category->name ?? '-' }}</td>
             <td>{{ $book->isbn }}</td>
             <td>{{ number_format($book->average_rating ?? 0, 1) }}</td>
             <td>{{ $book->voters_count ?? 0 }}</td>
@@ -122,7 +122,5 @@
 </table>
 
 <!-- Pagination -->
-<div class="d-flex justify-content-center">
-    {{ $books->links() }}
-</div>
+{{ $books->links('pagination::bootstrap-5') }}
 @endsection

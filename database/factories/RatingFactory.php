@@ -17,7 +17,9 @@ class RatingFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'book_id' => \App\Models\Book::factory(),
+            'rating' => $this->faker->numberBetween(1, 10),
+            'voter_name' => $this->faker->name(),
         ];
     }
 }

@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->string('title');
             $table->foreignId('author_id')->constrained()->onDelete('cascade');
-            $table->string('category')->nullable();
+            $table->foreignId('category_id')->constrained()->onDelete('cascade');
             $table->string('isbn')->nullable();
             $table->string('publisher')->nullable();
             $table->year('publication_year')->nullable();

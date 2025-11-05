@@ -13,9 +13,10 @@ class AuthorSeeder extends Seeder
      */
     public function run(): void
     {
-        Author::create(['name' => 'J.K. Rowling']);
-        Author::create(['name' => 'George R.R. Martin']);
-        Author::create(['name' => 'Haruki Murakami']);
-        Author::create(['name' => 'Tere Liye']);
+        // Author::create(['name' => 'J.K. Rowling']);
+        // Author::create(['name' => 'George R.R. Martin']);
+        // Author::create(['name' => 'Haruki Murakami']);
+        // Author::create(['name' => 'Tere Liye']);
+        Author::factory()->count(1000)->create();
     }
 }
