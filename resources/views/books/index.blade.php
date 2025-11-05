@@ -70,6 +70,11 @@
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary w-100">Terapkan</button>
     </div>
+
+    <!-- Tombol Reset -->
+    <div class="col-md-2 col-lg-2 d-grid">
+        <a href="{{ route('books.index') }}" class="btn btn-outline-secondary">Reset</a>
+    </div>
 </form>
 
 <!-- Tabel Buku -->

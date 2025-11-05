@@ -2,60 +2,57 @@
 
 @section('content')
 <div class="container mt-4">
-    <h2 class="mb-4">Input Rating Buku</h2>
+    <h2>Input Rating Buku</h2>
 
-    <!-- Pesan sukses -->
-    @if (session('success'))
+    @if(session('success'))
         <div class="alert alert-success">{{ session('success') }}</div>
     @endif
 
-    <!-- Form Input Rating -->
-    <form action="{{ route('ratings.store') }}" method="POST" class="card p-4 shadow-sm">
-        @csrf
-
-        <!-- Pilih Penulis -->
-        <div class="mb-3">
-            <label for="author" class="form-label">Pilih Penulis</label>
-            <select id="author" name="author_id" class="form-select" required>
+    {{-- Form GET untuk pilih penulis agar bisa filter buku --}}
+    <form method="GET" action="{{ route('ratings.create') }}">
+        <div class="form-group mb-3">
+            <label for="author">Pilih Penulis:</label>
+            <select name="author_id" id="author" class="form-control" onchange="this.form.submit()">
                 <option value="">-- Pilih Penulis --</option>
-                @foreach ($authors as $author)
-                    <option value="{{ $author->id }}">{{ $author->name }}</option>
+                @foreach($authors as $author)
+                    <option value="{{ $author->id }}" {{ (isset($author_id) && $author_id == $author->id) ? 'selected' : '' }}>
+                        {{ $author->name }}
+                    </option>
                 @endforeach
             </select>
         </div>
+    </form>
 
-        <!-- Pilih Buku -->
-        <div class="mb-3">
-            <label for="book" class="form-label">Pilih Buku</label>
-            <select id="book" name="book_id" class="form-select" required>
+    {{-- Form POST untuk submit rating --}}
+    <form method="POST" action="{{ route('ratings.store') }}">
+        @csrf
+        <input type="hidden" name="author_id" value="{{ $author_id }}">
+
+        <div class="form-group mb-3">
+            <label for="book">Pilih Buku:</label>
+            <select name="book_id" id="book" class="form-control" required>
                 <option value="">-- Pilih Buku --</option>
-                @foreach ($books as $book)
+                @foreach($books as $book)
                     <option value="{{ $book->id }}">{{ $book->title }}</option>
                 @endforeach
             </select>
         </div>
 
-        <!-- Input Rating -->
-        <div class="mb-3">
-            <label for="rating" class="form-label">Rating (1–10)</label>
-            <select id="rating" name="rating" class="form-select" required>
-                <option value="">-- Pilih Nilai --</option>
-                @for ($i = 1; $i <= 10; $i++)
+        <div class="form-group mb-3">
+            <label for="rating">Rating (1–10):</label>
+            <select name="rating" id="rating" class="form-control" required>
+                @for($i=1; $i<=10; $i++)
                     <option value="{{ $i }}">{{ $i }}</option>
                 @endfor
             </select>
         </div>
 
-        <!-- Input Nama Voter -->
-        <div class="mb-3">
-            <label for="voter_name" class="form-label">Nama Pemberi Rating</label>
-            <input type="text" id="voter_name" name="voter_name" class="form-control" placeholder="Masukkan nama Anda" required>
+        <div class="form-group mb-3">
+            <label for="voter_name">Nama Voter:</label>
+            <input type="text" name="voter_name" id="voter_name" class="form-control" required>
         </div>
 
-        <!-- Tombol -->
-        <div class="text-end">
-            <button type="submit" class="btn btn-primary">Simpan Rating</button>
-        </div>
+        <button type="submit" class="btn btn-primary">Submit Rating</button>
     </form>
 </div>
 @endsection

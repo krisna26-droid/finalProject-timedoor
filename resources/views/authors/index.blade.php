@@ -4,25 +4,33 @@
     <h2 class="mb-4">Top Authors</h2>
 
     <!-- Filter / Sorting -->
-    <form method="GET" action="{{ route('authors.index') }}" class="row g-3 mb-4">
-        <div class="col-md-3">
-            <input type="text" name="search" class="form-control" placeholder="Cari penulis..."
+    <form method="GET" action="{{ route('authors.index') }}" class="row g-2 align-items-center mb-4">
+        <div class="col-md-4 col-lg-3">
+            <input type="text" 
+                name="search" 
+                class="form-control" 
+                placeholder="Cari penulis..." 
                 value="{{ request('search') }}">
         </div>
 
-        <div class="col-md-3">
+        <div class="col-md-4 col-lg-3">
             <select name="sort" class="form-select">
-                <option value="">Urutkan Berdasarkan</option>
+                <option value="" disabled {{ request('sort') ? '' : 'selected' }}>Urutkan Berdasarkan</option>
                 <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Popularitas (voters > 5)</option>
                 <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Rata-rata Rating</option>
                 <option value="trending" {{ request('sort') == 'trending' ? 'selected' : '' }}>Trending</option>
             </select>
         </div>
 
-        <div class="col-md-2">
-            <button type="submit" class="btn btn-primary w-100">Tampilkan</button>
+        <div class="col-md-2 col-lg-2 d-grid">
+            <button type="submit" class="btn btn-primary">Tampilkan</button>
+        </div>
+
+        <div class="col-md-2 col-lg-2 d-grid">
+            <a href="{{ route('authors.index') }}" class="btn btn-outline-secondary">Reset</a>
         </div>
     </form>
+
 
     <!-- Tabel daftar penulis -->
     <table class="table table-bordered align-middle">

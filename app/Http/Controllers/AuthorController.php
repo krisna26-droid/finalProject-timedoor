@@ -12,8 +12,14 @@ class AuthorController extends Controller
 {
     public function index()
     {
-        // Ambil semua penulis
-        $authors = Author::paginate(10);
+        $search = request('search');
+        $query = Author::query();
+
+        if ($search) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        $authors = $query->paginate(100);
 
         // Bikin data tambahan untuk tiap penulis
         foreach ($authors as $author) {
@@ -46,6 +52,6 @@ class AuthorController extends Controller
             $author->worst_book = $worstBook->title ?? '-';
         }
 
-        return view('authors.index', compact('authors'));
+        return view('authors.index', compact('authors', 'search'));
     }
 }
