@@ -6,83 +6,103 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\Rating;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-
 
 class AuthorController extends Controller
 {
     public function index()
     {
         $search = request('search');
-        $query = Author::query();
+        $sort = request('sort'); // null jika user belum memilih
+        $now = Carbon::now();
+
+        $recentStart = $now->copy()->subDays(30);
+        $previousStart = $now->copy()->subDays(60);
+        $previousEnd = $now->copy()->subDays(31);
+
+        // Ambil semua statistik dasar via subquery
+        $query = Author::query()
+            ->select('authors.*')
+            ->selectSub(function ($q) {
+                $q->from('books')
+                  ->whereColumn('books.author_id', 'authors.id')
+                  ->selectRaw('COUNT(*)');
+            }, 'books_count')
+            ->selectSub(function ($q) {
+                $q->from('ratings')
+                  ->join('books', 'books.id', '=', 'ratings.book_id')
+                  ->whereColumn('books.author_id', 'authors.id')
+                  ->selectRaw('AVG(ratings.rating)');
+            }, 'average_rating')
+            ->selectSub(function ($q) {
+                $q->from('ratings')
+                  ->join('books', 'books.id', '=', 'ratings.book_id')
+                  ->whereColumn('books.author_id', 'authors.id')
+                  ->selectRaw('COUNT(*)');
+            }, 'total_voters')
+            ->selectSub(function ($q) {
+                $q->from('ratings')
+                  ->join('books', 'books.id', '=', 'ratings.book_id')
+                  ->whereColumn('books.author_id', 'authors.id')
+                  ->where('ratings.rating', '>', 5)
+                  ->selectRaw('COUNT(*)');
+            }, 'popularity');
 
         if ($search) {
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $authors = $query->paginate(20);
+        $authors = $query->get();
 
-        //Trending score
-        $now = Carbon::now();
-        $currentMonth = $now->month;
-        $lastMonth = $now->copy()->subMonth()->month;
+        // Ambil semua ratings 60 hari terakhir sekaligus
+        $ratings60 = Rating::select('ratings.id','ratings.rating','books.author_id','ratings.book_id','ratings.created_at')
+            ->join('books','books.id','=','ratings.book_id')
+            ->where('ratings.created_at', '>=', $previousStart)
+            ->get()
+            ->groupBy('author_id');
+
+        // Ambil semua avg per book untuk best/worst book sekaligus
+        $bookAvg = Book::select('books.author_id','books.id','books.title',DB::raw('AVG(ratings.rating) as avg_rating'))
+            ->leftJoin('ratings','ratings.book_id','=','books.id')
+            ->groupBy('books.id','books.author_id','books.title')
+            ->get()
+            ->groupBy('author_id');
 
         foreach ($authors as $author) {
-            // Ambil semua buku penulis
-            $bookIds = Book::where('author_id', $author->id)->pluck('id');
+            $authorRatings = $ratings60->get($author->id, collect());
 
-            // Rata-rata rating bulan ini
-            $avgRecent = Rating::whereIn('book_id', $bookIds)
-                ->whereMonth('created_at', $currentMonth)
-                ->whereYear('created_at', $now->year)
-                ->avg('rating');
+            $avgRecent = $authorRatings->where('created_at','>=',$recentStart)->avg('rating') ?? 0;
+            $avgPrevious = $authorRatings->whereBetween('created_at', [$previousStart, $previousEnd])->avg('rating') ?? 0;
 
-            // Rata-rata rating bulan lalu
-            $avgLast = Rating::whereIn('book_id', $bookIds)
-                ->whereMonth('created_at', $lastMonth)
-                ->whereYear('created_at', $now->copy()->subMonth()->year)
-                ->avg('rating');
-
-            // Hitung jumlah voters total
-            $voterCount = Rating::whereIn('book_id', $bookIds)->count();
-
-            // Rumus Trending Score
-            $diff = ($avgRecent ?? 0) - ($avgLast ?? 0);
-            $weight = log(1 + $voterCount); // bisa diganti f(voterCount)
+            $diff = $avgRecent - $avgPrevious;
+            $weight = $author->total_voters > 0 ? log(1 + $author->total_voters) : 0;
             $author->trending_score = $diff * $weight;
+
+            // Best & Worst book
+            $booksAuthor = $bookAvg->get($author->id, collect());
+            if($booksAuthor->isEmpty()) {
+                $author->best_book = '-';
+                $author->worst_book = '-';
+            } else {
+                $author->best_book = $booksAuthor->sortByDesc('avg_rating')->first()->title;
+                $author->worst_book = $booksAuthor->sortBy('avg_rating')->first()->title;
+            }
         }
 
-        // Bikin data tambahan untuk tiap penulis
-        foreach ($authors as $author) {
-            // Ambil semua buku milik penulis ini
-            $books = Book::where('author_id', $author->id)->get();
-
-            // Hitung jumlah buku
-            $author->books_count = $books->count();
-
-            // Ambil semua rating dari buku-buku milik penulis ini
-            $bookIds = $books->pluck('id');
-            $ratings = Rating::whereIn('book_id', $bookIds)->get();
-
-            // Hitung rata-rata rating dan jumlah voters
-            $author->average_rating = $ratings->avg('rating') ?? 0;
-            $author->total_voters = $ratings->count();
-
-            // Cari buku terbaik & terburuk
-            $bestBook = Book::whereIn('id', $bookIds)
-                ->withAvg('ratings', 'rating')
-                ->orderByDesc('ratings_avg_rating')
-                ->first();
-
-            $worstBook = Book::whereIn('id', $bookIds)
-                ->withAvg('ratings', 'rating')
-                ->orderBy('ratings_avg_rating')
-                ->first();
-
-            $author->best_book = $bestBook->title ?? '-';
-            $author->worst_book = $worstBook->title ?? '-';
+        // Sorting
+        if($sort){
+            $authors = match($sort) {
+                'popularity' => $authors->sortByDesc('popularity'),
+                'rating' => $authors->sortByDesc('average_rating'),
+                'trending' => $authors->sortByDesc('trending_score'),
+                default => $authors
+            };
         }
 
-        return view('authors.index', compact('authors', 'search'));
+        // Ambil top 20
+        $authors = $authors->values()->take(20);
+
+        return view('authors.index', compact('authors','search','sort'));
     }
 }

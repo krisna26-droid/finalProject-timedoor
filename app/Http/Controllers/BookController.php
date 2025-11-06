@@ -7,112 +7,121 @@ use App\Models\Book;
 use App\Models\Rating;
 use Carbon\Carbon;
 
-
 class BookController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
+
         $category = $request->input('category');
-        $authorId = $request->input('author_id');
+
+        $authorName = $request->input('author_id');
 
         $yearFrom = $request->input('year_from');
         $yearTo = $request->input('year_to');
 
         $status = $request->input('status');
 
-        $store_location =  $request->input('store_location');
+        $store_location = $request->input('store_location');
 
-        // $minRating = $request->input('min_rating');
-        // $maxRating = $request->input('max_rating');
+        $minRating = $request->input('min_rating');
+        $maxRating = $request->input('max_rating');
 
-        
-        // Mulai query dengan relasi
-        $books = Book::with(['author', 'category', 'ratings']);
+        $sort = $request->input('sort');
 
-        // Filter search
+        // Base query with eager loading & aggregate
+        $books = Book::with(['author', 'category'])
+            ->withCount('ratings')
+            ->withAvg('ratings', 'rating');
+
+        // Filter: search
         if ($search) {
-            $books->where(function ($query) use ($search) {
-                $query->where('title', 'like', "%{$search}%")
-                      ->orWhere('isbn', 'like', "%{$search}%")
-                      ->orWhere('publisher', 'like', "%{$search}%")
-                      ->orWhereHas('author', function ($query) use ($search) {
-                          $query->where('name', 'like', "%{$search}%");
-                      });
+            $books->where(function($q) use ($search) {
+                $q->where('title','like',"%{$search}%")
+                  ->orWhere('isbn','like',"%{$search}%")
+                  ->orWhere('publisher','like',"%{$search}%")
+                  ->orWhereHas('author', function($q) use ($search){
+                      $q->where('name','like',"%{$search}%");
+                  });
             });
         }
 
         // Filter kategori
         if ($category) {
             $categories = array_map('trim', explode(',', $category));
-            $books->whereHas('category', function ($query) use ($categories) {
-                $query->whereIn('name', $categories);
+            $books->whereHas('category', function($q) use ($categories){
+                $q->whereIn('name', $categories);
             });
         }
 
-        // Filter Id Penulis
-        if ($authorId) {
-            $books->where('author_id', $authorId);
+        // Filter author
+        if ($authorName) {
+            $books->whereHas('author', function($q) use ($authorName){
+                $q->where('id', $authorName);
+            });
         }
 
-        // Filter berdasarkan rentang tahun
+        // Filter tahun
         if ($yearFrom && $yearTo) {
             $books->whereBetween('publication_year', [$yearFrom, $yearTo]);
         } elseif ($yearFrom) {
-            $books->where('publication_year', '>=', $yearFrom);
+            $books->where('publication_year','>=',$yearFrom);
         } elseif ($yearTo) {
-            $books->where('publication_year', '<=', $yearTo);
+            $books->where('publication_year','<=',$yearTo);
         }
 
-        // Filter by statusnya
-        if ($status) {
-            $books->where('status', $status);
-        }
+        // Filter status
+        if ($status) $books->where('status', $status);
 
         // Filter lokasi toko
-        if ($store_location) {
-            $books->where('store_location', $store_location);
+        if ($store_location) $books->where('store_location', $store_location);
+
+        // Filter rating min/max
+        if ($minRating || $maxRating) {
+            if ($minRating) $books->having('ratings_avg_rating', '>=', $minRating);
+            if ($maxRating) $books->having('ratings_avg_rating', '<=', $maxRating);
         }
 
-        // Filter berdasarkan rentang rating
-        
-
-        // Pagination 100 
-        $books = $books->paginate(100);
-        if ($books->isEmpty()) {
-            return view('books.index', compact('books'));
-        } 
-
-        // Hitung average rating dan voters count
-        foreach ($books as $book) {
-            $book->average_rating = $book->ratings->avg('rating') ?? 0;
-            $book->voters_count = $book->ratings->count();
-        }
-
-        //tren Naik turun
-        $now = Carbon::now();
-        $currentMonth = $now->month;
-        $lastMonth = $now->copy()->subMonth()->month;
-
-        foreach ($books as $book) {
-            $avgRecent = Rating::where('book_id', $book->id)
-                ->whereMonth('created_at', $currentMonth)
-                ->whereYear('created_at', $now->year)
-                ->avg('rating');
-
-            $avgLast = Rating::where('book_id', $book->id)
-                ->whereMonth('created_at', $lastMonth)
-                ->whereYear('created_at', $now->copy()->subMonth()->year)
-                ->avg('rating');
-
-            if ($avgRecent > $avgLast) {
-                $book->trend = 'up';
-            } elseif ($avgRecent < $avgLast) {
-                $book->trend = 'down';
-            } else {
-                $book->trend = null;
+        // Sorting
+        if ($sort) {
+            switch($sort){
+                case 'votes':
+                    $books->orderBy('ratings_count','desc');
+                    break;
+                case 'recent':
+                    $books->withCount(['ratings as recent_ratings_count' => function($q){
+                        $q->where('created_at','>=', now()->subDays(30));
+                    }])->orderBy('recent_ratings_count','desc');
+                    break;
+                case 'alphabet':
+                    $books->orderBy('title','asc');
+                    break;
+                case 'weighted':
+                    $books->orderBy('ratings_avg_rating','desc');
+                    break;
             }
         }
+
+
+        // Paginate
+        $books = $books->paginate(100)->appends(request()->query());
+
+
+        // Hitung tren naik/turun (30 hari vs 30 hari sebelumnya)
+        $now = Carbon::now();
+        foreach($books as $book){
+            $avgRecent = Rating::where('book_id', $book->id)
+                        ->where('created_at','>=', $now->copy()->subDays(30))
+                        ->avg('rating');
+
+            $avgLast = Rating::where('book_id', $book->id)
+                        ->where('created_at','<', $now->copy()->subDays(30))
+                        ->where('created_at','>=', $now->copy()->subDays(60))
+                        ->avg('rating');
+
+            $book->trend = $avgRecent > $avgLast ? 'up' : ($avgRecent < $avgLast ? 'down' : null);
+        }
+
         return view('books.index', compact('books'));
     }
 }

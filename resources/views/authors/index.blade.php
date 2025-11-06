@@ -15,10 +15,10 @@
 
         <div class="col-md-4 col-lg-3">
             <select name="sort" class="form-select">
-                <option value="" disabled {{ request('sort') ? '' : 'selected' }}>Urutkan Berdasarkan</option>
-                <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Popularitas (rata rata rating > 5)</option>
-                <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Rata-rata Rating</option>
+                <option value="" disabled {{ request('sort') ? '' : 'selected' }}>Urutkan berdasarkan</option>
                 <option value="trending" {{ request('sort') == 'trending' ? 'selected' : '' }}>Trending</option>
+                <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Popularitas (Rating > 5)</option>
+                <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Rata-rata Rating</option>
             </select>
         </div>
 
@@ -31,7 +31,6 @@
         </div>
     </form>
 
-
     <!-- Tabel daftar penulis -->
     <table class="table table-bordered align-middle">
         <thead class="table-dark">
@@ -41,30 +40,30 @@
                 <th>Jumlah Buku</th>
                 <th>Rata-rata Rating</th>
                 <th>Total Voters</th>
+                <th>Popularity (Rating > 5)</th>
                 <th>Trending Score</th>
                 <th>Buku Terbaik</th>
                 <th>Buku Terburuk</th>
             </tr>
         </thead>
         <tbody>
-            @forelse ($authors as $author)
+            @forelse ($authors as $index => $author)
                 <tr>
-                    <td>{{ $loop->iteration + ($authors->currentPage() - 1) * $authors->perPage() }}</td>
+                    <td>{{ $index + 1 }}</td>
                     <td>{{ $author->name }}</td>
                     <td>{{ $author->books_count }}</td>
-                    <td>{{ number_format($author->average_rating ?? 0, 1) }}</td>
-                    <td>{{ $author->total_voters ?? 0 }}</td>
-                    <td>{{ number_format($author->trending_score ?? 0, 2) }}</td>
-                    <td>{{ $author->best_book ?? '-' }}</td>
-                    <td>{{ $author->worst_book ?? '-' }}</td>
+                    <td>{{ number_format($author->average_rating, 1) }}</td>
+                    <td>{{ $author->total_voters }}</td>
+                    <td>{{ $author->popularity }}</td>
+                    <td>{{ number_format($author->trending_score, 2) }}</td>
+                    <td>{{ $author->best_book }}</td>
+                    <td>{{ $author->worst_book }}</td>
                 </tr>
             @empty
                 <tr>
-                    <td colspan="7" class="text-center text-muted">Belum ada data penulis</td>
+                    <td colspan="9" class="text-center text-muted">Belum ada data penulis</td>
                 </tr>
             @endforelse
         </tbody>
     </table>
-    <!-- Pagination -->
-    {{ $authors->links('pagination::bootstrap-5') }}
 @endsection

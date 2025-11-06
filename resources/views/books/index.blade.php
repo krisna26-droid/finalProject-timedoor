@@ -5,7 +5,6 @@
 
 <!-- Filter -->
 <form method="GET" action="{{ route('books.index') }}" class="row g-3 mb-4">
-
     <!-- Pencarian -->
     <div class="col-md-3">
         <input type="text" name="search" class="form-control" placeholder="Cari judul, penulis, ISBN, atau penerbit" value="{{ request('search') }}">
@@ -31,9 +30,9 @@
     <div class="col-md-2">
         <select name="status" class="form-select">
             <option value="">Semua Status</option>
-            <option value="available" {{ request('status') == 'available' ? 'selected' : '' }}>Available</option>
-            <option value="rented" {{ request('status') == 'rented' ? 'selected' : '' }}>Rented</option>
-            <option value="reserved" {{ request('status') == 'reserved' ? 'selected' : '' }}>Reserved</option>
+            <option value="available" {{ request('status')=='available'?'selected':'' }}>Available</option>
+            <option value="rented" {{ request('status')=='rented'?'selected':'' }}>Rented</option>
+            <option value="reserved" {{ request('status')=='reserved'?'selected':'' }}>Reserved</option>
         </select>
     </div>
 
@@ -44,28 +43,26 @@
 
     <!-- Rentang Rating -->
     <div class="col-md-4 d-flex gap-2">
-        <input type="number" name="min_rating" class="form-control" placeholder="Mininimal Rating" min="1" max="10" value="{{ request('min_rating') }}">
-        <input type="number" name="max_rating" class="form-control" placeholder="Maximal Rating" min="1" max="10" value="{{ request('max_rating') }}">
+        <input type="number" name="min_rating" class="form-control" placeholder="Min Rating" min="1" max="10" value="{{ request('min_rating') }}">
+        <input type="number" name="max_rating" class="form-control" placeholder="Max Rating" min="1" max="10" value="{{ request('max_rating') }}">
     </div>
 
     <!-- Sorting -->
     <div class="col-md-2">
         <select name="sort" class="form-select">
-            <option value="" disabled {{request('sort') ? '' : 'selected' }}>Urutkan</option>
-            <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Rating Tertinggi</option>
-            <option value="voters" {{ request('sort') == 'voters' ? 'selected' : '' }}>Jumlah Voter</option>
-            <option value="recent" {{ request('sort') == 'recent' ? 'selected' : '' }}>Terpopuler (30 Hari)</option>
-            <option value="alphabet" {{ request('sort') == 'alphabet' ? 'selected' : '' }}>A-Z</option>
+            <option value="" disabled {{ request('sort') ? '' : 'selected' }}>Urutkan berdasarkan</option>
+            <option value="weighted" {{ request('sort')=='weighted' ? 'selected' : '' }}>Rating tertinggi</option>
+            <option value="votes" {{ request('sort')=='votes' ? 'selected' : '' }}>Jumlah Voter</option>
+            <option value="recent" {{ request('sort')=='recent' ? 'selected' : '' }}>Terpopuler (30 Hari)</option>
+            <option value="alphabet" {{ request('sort')=='alphabet' ? 'selected' : '' }}>A-Z</option>
         </select>
     </div>
 
-    <!-- Tombol Terapkan -->
     <div class="col-md-2">
         <button type="submit" class="btn btn-primary w-100">Terapkan</button>
     </div>
 
-    <!-- Tombol Reset -->
-    <div class="col-md-2 col-lg-2 d-grid">
+    <div class="col-md-2 d-grid">
         <a href="{{ route('books.index') }}" class="btn btn-outline-secondary">Reset</a>
     </div>
 </form>
@@ -89,9 +86,9 @@
         </tr>
     </thead>
     <tbody>
-        @forelse ($books as $book)
+        @forelse($books as $book)
         <tr>
-            <td>{{ $loop->iteration + ($books->currentPage() - 1) * $books->perPage() }}</td>
+            <td>{{ $loop->iteration + ($books->currentPage()-1)*$books->perPage() }}</td>
             <td>{{ $book->title }}</td>
             <td>{{ $book->author->name ?? '-' }}</td>
             <td>{{ $book->category->name ?? '-' }}</td>
@@ -99,15 +96,12 @@
             <td>{{ $book->store_location ?? '-' }}</td>
             <td>{{ $book->publisher ?? '-' }}</td>
             <td>{{ $book->publication_year ?? '-' }}</td>
-            <td>{{ number_format($book->average_rating ?? 0, 1) }}</td>
-            <td>{{ $book->voters_count ?? 0 }}</td>
+            <td>{{ number_format($book->ratings_avg_rating ?? 0,1) }}</td>
+            <td>{{ $book->ratings_count ?? 0 }}</td>
             <td>
-                @if (!empty($book->trend) && $book->trend === 'up')
-                    <span class="text-success">↑</span>
-                @elseif (!empty($book->trend) && $book->trend === 'down')
-                    <span class="text-danger">↓</span>
-                @else
-                    <span class="text-muted">-</span>
+                @if($book->trend=='up') <span class="text-success">↑</span>
+                @elseif($book->trend=='down') <span class="text-danger">↓</span>
+                @else <span class="text-muted">-</span>
                 @endif
             </td>
             <td>
@@ -121,7 +115,7 @@
         </tr>
         @empty
         <tr>
-            <td colspan="8" class="text-center text-muted">Belum ada data buku</td>
+            <td colspan="12" class="text-center text-muted">Belum ada data buku</td>
         </tr>
         @endforelse
     </tbody>
