@@ -22,9 +22,9 @@
     </div>
 
     <!-- Tahun terbit -->
-    <div class="col-md-2 d-flex gap-2">
-        <input type="number" name="year_from" class="form-control" placeholder="Dari" value="{{ request('year_from') }}">
-        <input type="number" name="year_to" class="form-control" placeholder="Sampai" value="{{ request('year_to') }}">
+    <div class="col-md-3 d-flex gap-3">
+        <input type="number" name="year_from" class="form-control" placeholder="Dari Tahun" value="{{ request('year_from') }}">
+        <input type="number" name="year_to" class="form-control" placeholder="Sampai Tahun" value="{{ request('year_to') }}">
     </div>
 
     <!-- Status -->
@@ -43,15 +43,15 @@
     </div>
 
     <!-- Rentang Rating -->
-    <div class="col-md-2 d-flex gap-2">
-        <input type="number" name="rating_min" class="form-control" placeholder="Min" min="1" max="10" value="{{ request('rating_min') }}">
-        <input type="number" name="rating_max" class="form-control" placeholder="Max" min="1" max="10" value="{{ request('rating_max') }}">
+    <div class="col-md-4 d-flex gap-2">
+        <input type="number" name="min_rating" class="form-control" placeholder="Mininimal Rating" min="1" max="10" value="{{ request('min_rating') }}">
+        <input type="number" name="max_rating" class="form-control" placeholder="Maximal Rating" min="1" max="10" value="{{ request('max_rating') }}">
     </div>
 
     <!-- Sorting -->
     <div class="col-md-2">
         <select name="sort" class="form-select">
-            <option value="">Urutkan</option>
+            <option value="" disabled {{request('sort') ? '' : 'selected' }}>Urutkan</option>
             <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Rating Tertinggi</option>
             <option value="voters" {{ request('sort') == 'voters' ? 'selected' : '' }}>Jumlah Voter</option>
             <option value="recent" {{ request('sort') == 'recent' ? 'selected' : '' }}>Terpopuler (30 Hari)</option>
@@ -74,12 +74,16 @@
 <table class="table table-striped table-bordered align-middle">
     <thead class="table-dark">
         <tr>
+            <th>No</th>
             <th>Judul</th>
             <th>Penulis</th>
             <th>Kategori</th>
             <th>ISBN</th>
-            <th>Rata-rata Rating</th>
-            <th>Total Voter</th>
+            <th>Lokasi</th>
+            <th>Penerbit</th>
+            <th>Tahun</th>
+            <th>Rating</th>
+            <th>Voter</th>
             <th>Tren</th>
             <th>Status</th>
         </tr>
@@ -87,10 +91,14 @@
     <tbody>
         @forelse ($books as $book)
         <tr>
+            <td>{{ $loop->iteration + ($books->currentPage() - 1) * $books->perPage() }}</td>
             <td>{{ $book->title }}</td>
             <td>{{ $book->author->name ?? '-' }}</td>
             <td>{{ $book->category->name ?? '-' }}</td>
             <td>{{ $book->isbn }}</td>
+            <td>{{ $book->store_location ?? '-' }}</td>
+            <td>{{ $book->publisher ?? '-' }}</td>
+            <td>{{ $book->publication_year ?? '-' }}</td>
             <td>{{ number_format($book->average_rating ?? 0, 1) }}</td>
             <td>{{ $book->voters_count ?? 0 }}</td>
             <td>

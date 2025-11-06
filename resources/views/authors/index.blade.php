@@ -16,7 +16,7 @@
         <div class="col-md-4 col-lg-3">
             <select name="sort" class="form-select">
                 <option value="" disabled {{ request('sort') ? '' : 'selected' }}>Urutkan Berdasarkan</option>
-                <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Popularitas (rata rata vote > 5)</option>
+                <option value="popularity" {{ request('sort') == 'popularity' ? 'selected' : '' }}>Popularitas (rata rata rating > 5)</option>
                 <option value="rating" {{ request('sort') == 'rating' ? 'selected' : '' }}>Rata-rata Rating</option>
                 <option value="trending" {{ request('sort') == 'trending' ? 'selected' : '' }}>Trending</option>
             </select>
@@ -36,6 +36,7 @@
     <table class="table table-bordered align-middle">
         <thead class="table-dark">
             <tr>
+                <th>No</th>
                 <th>Nama Penulis</th>
                 <th>Jumlah Buku</th>
                 <th>Rata-rata Rating</th>
@@ -48,6 +49,7 @@
         <tbody>
             @forelse ($authors as $author)
                 <tr>
+                    <td>{{ $loop->iteration + ($authors->currentPage() - 1) * $authors->perPage() }}</td>
                     <td>{{ $author->name }}</td>
                     <td>{{ $author->books_count }}</td>
                     <td>{{ number_format($author->average_rating ?? 0, 1) }}</td>

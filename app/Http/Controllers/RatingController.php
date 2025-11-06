@@ -13,7 +13,7 @@ class RatingController extends Controller
     {
         $authors = Author::all();
         
-        // Ambil penulis yang dipilih (dari GET)
+        // Ambil penulis yang dipilih 
         $author_id = $request->get('author_id');
 
         // Ambil buku milik penulis yang dipilih, kalau tidak ada penulis pilih, kosong

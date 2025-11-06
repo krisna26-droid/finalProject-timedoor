@@ -6,6 +6,7 @@ use App\Models\Author;
 use App\Models\Book;
 use App\Models\Rating;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 
 class AuthorController extends Controller
@@ -19,7 +20,37 @@ class AuthorController extends Controller
             $query->where('name', 'like', "%{$search}%");
         }
 
-        $authors = $query->paginate(100);
+        $authors = $query->paginate(20);
+
+        //Trending score
+        $now = Carbon::now();
+        $currentMonth = $now->month;
+        $lastMonth = $now->copy()->subMonth()->month;
+
+        foreach ($authors as $author) {
+            // Ambil semua buku penulis
+            $bookIds = Book::where('author_id', $author->id)->pluck('id');
+
+            // Rata-rata rating bulan ini
+            $avgRecent = Rating::whereIn('book_id', $bookIds)
+                ->whereMonth('created_at', $currentMonth)
+                ->whereYear('created_at', $now->year)
+                ->avg('rating');
+
+            // Rata-rata rating bulan lalu
+            $avgLast = Rating::whereIn('book_id', $bookIds)
+                ->whereMonth('created_at', $lastMonth)
+                ->whereYear('created_at', $now->copy()->subMonth()->year)
+                ->avg('rating');
+
+            // Hitung jumlah voters total
+            $voterCount = Rating::whereIn('book_id', $bookIds)->count();
+
+            // Rumus Trending Score
+            $diff = ($avgRecent ?? 0) - ($avgLast ?? 0);
+            $weight = log(1 + $voterCount); // bisa diganti f(voterCount)
+            $author->trending_score = $diff * $weight;
+        }
 
         // Bikin data tambahan untuk tiap penulis
         foreach ($authors as $author) {

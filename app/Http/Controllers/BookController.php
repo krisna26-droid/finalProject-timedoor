@@ -4,6 +4,9 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\Book;
+use App\Models\Rating;
+use Carbon\Carbon;
+
 
 class BookController extends Controller
 {
@@ -20,8 +23,10 @@ class BookController extends Controller
 
         $store_location =  $request->input('store_location');
 
-        
+        // $minRating = $request->input('min_rating');
+        // $maxRating = $request->input('max_rating');
 
+        
         // Mulai query dengan relasi
         $books = Book::with(['author', 'category', 'ratings']);
 
@@ -39,8 +44,9 @@ class BookController extends Controller
 
         // Filter kategori
         if ($category) {
-            $books->whereHas('category', function ($query) use  ($category) {
-                $query->where('name','like', '%' . $category . '%');
+            $categories = array_map('trim', explode(',', $category));
+            $books->whereHas('category', function ($query) use ($categories) {
+                $query->whereIn('name', $categories);
             });
         }
 
@@ -68,8 +74,14 @@ class BookController extends Controller
             $books->where('store_location', $store_location);
         }
 
+        // Filter berdasarkan rentang rating
+        
+
         // Pagination 100 
         $books = $books->paginate(100);
+        if ($books->isEmpty()) {
+            return view('books.index', compact('books'));
+        } 
 
         // Hitung average rating dan voters count
         foreach ($books as $book) {
@@ -77,6 +89,30 @@ class BookController extends Controller
             $book->voters_count = $book->ratings->count();
         }
 
+        //tren Naik turun
+        $now = Carbon::now();
+        $currentMonth = $now->month;
+        $lastMonth = $now->copy()->subMonth()->month;
+
+        foreach ($books as $book) {
+            $avgRecent = Rating::where('book_id', $book->id)
+                ->whereMonth('created_at', $currentMonth)
+                ->whereYear('created_at', $now->year)
+                ->avg('rating');
+
+            $avgLast = Rating::where('book_id', $book->id)
+                ->whereMonth('created_at', $lastMonth)
+                ->whereYear('created_at', $now->copy()->subMonth()->year)
+                ->avg('rating');
+
+            if ($avgRecent > $avgLast) {
+                $book->trend = 'up';
+            } elseif ($avgRecent < $avgLast) {
+                $book->trend = 'down';
+            } else {
+                $book->trend = null;
+            }
+        }
         return view('books.index', compact('books'));
     }
 }
