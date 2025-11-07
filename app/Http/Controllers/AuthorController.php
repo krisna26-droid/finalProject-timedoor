@@ -14,66 +14,61 @@ class AuthorController extends Controller
     public function index()
     {
         $search = request('search');
-        $sort = request('sort'); // null jika user belum memilih
+        $sort = request('sort');
         $now = Carbon::now();
 
         $recentStart = $now->copy()->subDays(30);
         $previousStart = $now->copy()->subDays(60);
         $previousEnd = $now->copy()->subDays(31);
 
-        // Ambil semua statistik dasar via subquery
+        // Ambil semua stats
         $query = Author::query()
-            ->select('authors.*')
-            ->selectSub(function ($q) {
-                $q->from('books')
-                  ->whereColumn('books.author_id', 'authors.id')
-                  ->selectRaw('COUNT(*)');
-            }, 'books_count')
-            ->selectSub(function ($q) {
-                $q->from('ratings')
-                  ->join('books', 'books.id', '=', 'ratings.book_id')
-                  ->whereColumn('books.author_id', 'authors.id')
-                  ->selectRaw('AVG(ratings.rating)');
-            }, 'average_rating')
-            ->selectSub(function ($q) {
-                $q->from('ratings')
-                  ->join('books', 'books.id', '=', 'ratings.book_id')
-                  ->whereColumn('books.author_id', 'authors.id')
-                  ->selectRaw('COUNT(*)');
-            }, 'total_voters')
-            ->selectSub(function ($q) {
-                $q->from('ratings')
-                  ->join('books', 'books.id', '=', 'ratings.book_id')
-                  ->whereColumn('books.author_id', 'authors.id')
-                  ->where('ratings.rating', '>', 5)
-                  ->selectRaw('COUNT(*)');
-            }, 'popularity');
+            ->leftJoin('books', 'books.author_id', '=', 'authors.id')
+            ->leftJoin('ratings', 'ratings.book_id', '=', 'books.id')
+            ->select('authors.*',
+                DB::raw('COUNT(DISTINCT books.id) as books_count'),
+                DB::raw('AVG(ratings.rating) as average_rating'),
+                DB::raw('COUNT(ratings.id) as total_voters'),
+                DB::raw('SUM(CASE WHEN ratings.rating > 5 THEN 1 ELSE 0 END) as popularity')
+            )
+            ->groupBy('authors.id');
 
         if ($search) {
-            $query->where('name', 'like', "%{$search}%");
+            $query->where('authors.name', 'like', "%{$search}%");
         }
 
-        $authors = $query->get();
+        // ambil lebih sedikit dulu (misal top 500) biar cepet sebelum disort nanti
+        $authors = $query->take(500)->get();
 
-        // Ambil semua ratings 60 hari terakhir sekaligus
-        $ratings60 = Rating::select('ratings.id','ratings.rating','books.author_id','ratings.book_id','ratings.created_at')
-            ->join('books','books.id','=','ratings.book_id')
-            ->where('ratings.created_at', '>=', $previousStart)
+        // Hitung rata-rata recent & previous rating (untuk trending)
+        $recentRatings = Rating::join('books', 'books.id', '=', 'ratings.book_id')
+            ->where('ratings.created_at', '>=', $recentStart)
+            ->groupBy('books.author_id')
+            ->select('books.author_id', DB::raw('AVG(ratings.rating) as avg_recent'))
+            ->pluck('avg_recent', 'author_id');
+
+        $previousRatings = Rating::join('books', 'books.id', '=', 'ratings.book_id')
+            ->whereBetween('ratings.created_at', [$previousStart, $previousEnd])
+            ->groupBy('books.author_id')
+            ->select('books.author_id', DB::raw('AVG(ratings.rating) as avg_previous'))
+            ->pluck('avg_previous', 'author_id');
+
+        // Ambil rata-rata rating per buku (untuk best & worst)
+        $bookAvg = Book::select(
+                'books.author_id',
+                'books.id',
+                'books.title',
+                DB::raw('AVG(ratings.rating) as avg_rating')
+            )
+            ->leftJoin('ratings', 'ratings.book_id', '=', 'books.id')
+            ->groupBy('books.id', 'books.author_id', 'books.title')
             ->get()
             ->groupBy('author_id');
 
-        // Ambil semua avg per book untuk best/worst book sekaligus
-        $bookAvg = Book::select('books.author_id','books.id','books.title',DB::raw('AVG(ratings.rating) as avg_rating'))
-            ->leftJoin('ratings','ratings.book_id','=','books.id')
-            ->groupBy('books.id','books.author_id','books.title')
-            ->get()
-            ->groupBy('author_id');
-
+        //(trending, best, worst)
         foreach ($authors as $author) {
-            $authorRatings = $ratings60->get($author->id, collect());
-
-            $avgRecent = $authorRatings->where('created_at','>=',$recentStart)->avg('rating') ?? 0;
-            $avgPrevious = $authorRatings->whereBetween('created_at', [$previousStart, $previousEnd])->avg('rating') ?? 0;
+            $avgRecent = $recentRatings[$author->id] ?? 0;
+            $avgPrevious = $previousRatings[$author->id] ?? 0;
 
             $diff = $avgRecent - $avgPrevious;
             $weight = $author->total_voters > 0 ? log(1 + $author->total_voters) : 0;
@@ -81,7 +76,7 @@ class AuthorController extends Controller
 
             // Best & Worst book
             $booksAuthor = $bookAvg->get($author->id, collect());
-            if($booksAuthor->isEmpty()) {
+            if ($booksAuthor->isEmpty()) {
                 $author->best_book = '-';
                 $author->worst_book = '-';
             } else {
@@ -91,18 +86,17 @@ class AuthorController extends Controller
         }
 
         // Sorting
-        if($sort){
-            $authors = match($sort) {
+        if ($sort) {
+            $authors = match ($sort) {
                 'popularity' => $authors->sortByDesc('popularity'),
                 'rating' => $authors->sortByDesc('average_rating'),
                 'trending' => $authors->sortByDesc('trending_score'),
-                default => $authors
+                default => $authors,
             };
         }
-
-        // Ambil top 20
+        //Ambil top 20
         $authors = $authors->values()->take(20);
 
-        return view('authors.index', compact('authors','search','sort'));
+        return view('authors.index', compact('authors', 'search', 'sort'));
     }
 }

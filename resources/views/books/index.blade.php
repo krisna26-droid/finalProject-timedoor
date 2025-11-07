@@ -50,7 +50,6 @@
     <!-- Sorting -->
     <div class="col-md-2">
         <select name="sort" class="form-select">
-            <option value="" disabled {{ request('sort') ? '' : 'selected' }}>Urutkan berdasarkan</option>
             <option value="weighted" {{ request('sort')=='weighted' ? 'selected' : '' }}>Rating tertinggi</option>
             <option value="votes" {{ request('sort')=='votes' ? 'selected' : '' }}>Jumlah Voter</option>
             <option value="recent" {{ request('sort')=='recent' ? 'selected' : '' }}>Terpopuler (30 Hari)</option>

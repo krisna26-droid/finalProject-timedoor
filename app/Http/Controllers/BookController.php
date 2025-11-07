@@ -27,7 +27,7 @@ class BookController extends Controller
         $minRating = $request->input('min_rating');
         $maxRating = $request->input('max_rating');
 
-        $sort = $request->input('sort');
+        $sort = $request->input('sort','weighted');
 
         // Base query with eager loading & aggregate
         $books = Book::with(['author', 'category'])
@@ -76,7 +76,7 @@ class BookController extends Controller
         // Filter lokasi toko
         if ($store_location) $books->where('store_location', $store_location);
 
-        // Filter rating min/max
+        // Filter rating 
         if ($minRating || $maxRating) {
             if ($minRating) $books->having('ratings_avg_rating', '>=', $minRating);
             if ($maxRating) $books->having('ratings_avg_rating', '<=', $maxRating);
