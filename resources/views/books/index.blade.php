@@ -17,8 +17,9 @@
 
     <!-- Penulis -->
     <div class="col-md-2">
-        <input type="text" name="author_id" class="form-control" placeholder="ID Penulis" value="{{ request('author_id') }}">
+        <input type="text" name="author_id" class="form-control" placeholder="Nama Penulis" value="{{ request('author_id') }}">
     </div>
+
 
     <!-- Tahun terbit -->
     <div class="col-md-3 d-flex gap-3">

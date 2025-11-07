@@ -56,8 +56,8 @@ class BookController extends Controller
 
         // Filter author
         if ($authorName) {
-            $books->whereHas('author', function($q) use ($authorName){
-                $q->where('id', $authorName);
+            $books->whereHas('author', function($q) use ($authorName) {
+                $q->where('name', 'like', "%{$authorName}%");
             });
         }
 
