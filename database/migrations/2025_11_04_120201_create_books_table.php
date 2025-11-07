@@ -22,7 +22,7 @@ return new class extends Migration
             $table->enum('status', ['available', 'rented', 'reserved'])->default('available');
             $table->string('store_location')->nullable();
             $table->timestamps();
-            });
+        });
     }
 
     /**
